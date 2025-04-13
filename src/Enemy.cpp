@@ -1,6 +1,6 @@
 #include "Entities.h"
 
-Enemy::Enemy(Entity* startTarget, float angleOrbit, float startSpeed, float startSize, Color startTint) : Entity(getRandomOutsidePosition(), startSpeed, startSize, startTint), target(startTarget) , orbitPos(angleOrbit)
+Enemy::Enemy(Vector2 spawnPos, float angleOrbit, float startSpeed, float startSize, Color startTint) : Entity(spawnPos, startSpeed, startSize, startTint), orbitPos(angleOrbit)
 {
     hitsToBlock = GetRandomValue(2, 10); // Set new threshold
     guardTimer = 0;
@@ -29,7 +29,7 @@ void Enemy::Tick(const float& deltaTime) {
         onDamagedTimer = onHitCooldown;
     }
     else {
-        Vector2 target = getTarget()->getPosition();;
+        Vector2 target = GetTargetPosition();
         int leftOrRight = consecutiveHits % 2 == 0 ? 1 : -1; // 1 for clockwise, -1 for counterclockwise
         orbitPos = Wrap(orbitPos + (deltaTime * 90 * leftOrRight), 0, 360);
 
@@ -72,44 +72,11 @@ void Enemy::Tick(const float& deltaTime) {
     //DrawText(TextFormat("%i / %i", consecutiveHits, hitsToBlock), getPosition().x, getPosition().y + (getSize() * 2), 20, BLACK);
 }
 
-void Enemy::Reset() {
-    Vector2 randomPos = getRandomOutsidePosition();
-    setPosition(randomPos.x, randomPos.y);
-
-    Entity::Reset();
-}
-
-Vector2 Enemy::getRandomOutsidePosition() {
-    const int margin = 50;
-    int side = GetRandomValue(0, 3); // 0 = left, 1 = right, 2 = top, 3 = bottom
-    Vector2 pos{ 0,0 };
-
-    switch (side) {
-    case 0: // Left
-        pos.x = -margin;
-        pos.y = GetRandomValue(0, GetScreenHeight());
-        break;
-    case 1: // Right
-        pos.x = GetScreenWidth() + margin;
-        pos.y = GetRandomValue(0, GetScreenHeight());
-        break;
-    case 2: // Top
-        pos.x = GetRandomValue(0, GetScreenWidth());
-        pos.y = -margin;
-        break;
-    case 3: // Bottom
-        pos.x = GetRandomValue(0, GetScreenWidth());
-        pos.y = GetScreenHeight() + margin;
-        break;
-    }
-    return pos;
-}
-
 bool Enemy::IsTryingToAttack() {
     return
         onHitTimer <= 0 && // Has recently attacked?
         onDamagedTimer <= 0 && // Is it on damaged stun?
-        Vector2Length(Vector2Subtract(getTarget()->getPosition(), getPosition())) <= (getAttackDistance() + getAttackRadius()); // Is near player to attack
+        Vector2Length(Vector2Subtract(GetTargetPosition(), getPosition())) <= (getAttackDistance() + getAttackRadius()); // Is near player to attack
 }
 
 bool Enemy::IsTryingToDefend() {
@@ -121,7 +88,7 @@ Vector2 Enemy::GetTargetPosition() {
         return Entity::GetTargetPosition(); // It'll return the current attack pos, so that the enemy attack one "line" per punch
     }
 
-    return getTarget()->getPosition();
+    return targetPosition;
 }
 
 bool Enemy::TryGetDamagedBy(Entity& attacker, int damage) {
@@ -148,12 +115,4 @@ bool Enemy::TryGetDamagedBy(Entity& attacker, int damage) {
     }
 
     return false;
-}
-
-void Enemy::CheckHit(Entity& other) {
-    if (target == nullptr || target != &other) {
-        return;
-    }
-
-    Entity::CheckHit(other);
 }

@@ -20,7 +20,7 @@ public:
 	float getHealthRatio() { return fmaxf(0, curHealth / maxHealth); }
 	const bool& isAttacking() const { return curAttackTime > 0; }
 	const bool& isOnGuard() const { return isDefending; }
-	const bool& canAttack() const { return ableToAttack && curAttackCooldown <= 0 && !isOnGuard(); }
+	const bool& canAttack() const { return curAttackCooldown <= 0 && !isOnGuard(); }
 	const bool& isOnKnockback() const { return knockbackTimer > 0; }
 	const bool& isAlive() const { return curHealth > 0; }
 
@@ -28,7 +28,6 @@ public:
 	void setMotion(float x, float y);
 	void setPosition(float x, float y);
 	void setSpeedMultiplier(float multiplier);
-	void setCanAttack(bool state);
 	void setStrength(float value);
 	
 	// VIRTUAL METHODS
@@ -74,7 +73,6 @@ private:
 	float curAttackCooldown{ 0.15f }, attackCooldown{ 0.15f };
 	int curAttackCount{  };
 	float attackRange{ 10 };
-	bool ableToAttack;
 
 	// Defending
 	bool isDefending{};
@@ -109,17 +107,19 @@ protected:
 
 class Enemy : public Entity {
 public:
-	Enemy(Entity* startTarget, float anglePos, float startSpeed, float startSize, Color startTint);
+	Enemy(Vector2 spawnPos, float anglePos, float startSpeed, float startSize, Color startTint);
 
+	void setTargetPosition(Vector2 newPos) {
+		targetPosition = newPos;
+	}
+
+	// Overrides
 	void Tick(const float& deltaTime) override;
-	void virtual Reset() override;
 	bool IsTryingToAttack() override;
 	bool IsTryingToDefend() override;
 	bool TryGetDamagedBy(Entity& attacker, int damage) override;
-	void CheckHit(Entity& other) override;
 
 private:
-	Entity* target;
 	float onDamagedTimer{ 0 };
 	float onHitTimer{};
 	const float onHitCooldown{ 0.35f };
@@ -129,8 +129,7 @@ private:
 	int hitsToBlock{ 4 };
 	bool hasBlocked{};
 	float orbitPos{};
-	Entity* getTarget() { return target; }
-	Vector2 getRandomOutsidePosition();
+	Vector2 targetPosition{}; // Controlled by Enemy Manager
 	Vector2 GetTargetPosition() override;
 };
 

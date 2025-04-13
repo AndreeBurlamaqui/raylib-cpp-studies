@@ -29,10 +29,6 @@ void Entity::setSpeedMultiplier(float multiplier) {
 	speedMultiplier = multiplier;
 }
 
-void Entity::setCanAttack(bool state) {
-	ableToAttack = state;
-}
-
 void Entity::setStrength(float value) {
 	strength = value;
 	printf("New Strength: %f\n", strength);
