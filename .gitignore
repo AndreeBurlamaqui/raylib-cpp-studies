@@ -400,3 +400,24 @@ build_files
 raylib-master
 Makefile
 /*.sln
+
+# From Noesis GitHub https://github.com/Noesis/Tutorials/blob/master/.gitignore
+.svn
+
+.vs
+*.ncb
+*.suo
+*.user
+*.opensdf
+*.sdf
+*.log
+*.dSYM
+*.exp
+*.pdb
+*.lib
+*.dll
+*.ilk
+ipch
+Thumbs.db
+*.exe
+*.obj
