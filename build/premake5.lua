@@ -14,6 +14,10 @@ newoption
 	default = "opengl33"
 }
 
+-- [[ NEW: NOESIS SETUP ]]
+-- Define where your Noesis SDK is located relative to this script
+local noesis_dir = "Plugins/NoesisGUI"
+
 function download_progress(total, current)
     local ratio = current / total;
     ratio = math.min(math.max(ratio, 0), 1);
@@ -160,12 +164,30 @@ if (downloadRaylib) then
             ["Header Files/*"] = { "../include/**.h",  "../include/**.hpp", "../src/**.h", "../src/**.hpp"},
             ["Source Files/*"] = {"../src/**.c", "src/**.cpp"},
         }
-        files {"../src/**.c", "../src/**.cpp", "../src/**.h", "../src/**.hpp", "../include/**.h", "../include/**.hpp"}
-    
+        
+        files {
+            "../src/**.c", 
+            "../src/**.cpp", 
+            "../src/**.h", 
+            "../src/**.hpp", 
+            "../include/**.h", 
+            "../include/**.hpp",
+            
+            -- [[ NEW: Direct Link to Noesis GLRenderDevice ]]
+            noesis_dir .. "/Src/Packages/Render/GLRenderDevice/Src/GLRenderDevice.cpp",
+            noesis_dir .. "/Src/Packages/Render/GLRenderDevice/Src/GLRenderDevice.h"
+        }    
+
         includedirs { "../src" }
         includedirs { "../include" }
+        
+        -- [[ NEW: NOESIS INCLUDES ]]
+        includedirs { noesis_dir .. "/Include", noesis_dir .. "/Src/Packages/Render/GLRenderDevice/Src", noesis_dir .. "/Src/Packages/App/Providers/Include",}
 
         links {"raylib"}
+        
+        -- [[ NEW: NOESIS LINKS ]]
+        links { "Noesis", "NoesisApp" }
 
         cdialect "C17"
         cppdialect "C++17"
@@ -187,6 +209,16 @@ if (downloadRaylib) then
             defines{"_WIN32"}
             links {"winmm", "gdi32", "opengl32"}
             libdirs {"../bin/%{cfg.buildcfg}"}
+
+            -- [[ NEW: NOESIS LIBS & DLL COPY ]]
+            -- 1. Add Library Directory
+            libdirs { noesis_dir .. "/Lib/windows_x86_64" }
+            
+            -- 2. Post-Build Command to copy Noesis.dll
+            -- We use path.getabsolute to ensure the command works regardless of where the build runs
+            postbuildcommands {
+                "{COPY} " .. path.getabsolute(noesis_dir) .. "/Bin/windows_x86_64/Noesis.dll %{cfg.targetdir}"
+            }
 
         filter "system:linux"
             links {"pthread", "m", "dl", "rt", "X11"}

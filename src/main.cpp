@@ -2,6 +2,20 @@
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 #include <vector>
 
+#include "raylib.h"
+#include "rlgl.h" // Required to access internal Raylib GL state
+
+#include <NoesisPCH.h>
+#include <NsCore/Noesis.h>
+#include <NsGui/IRenderer.h>
+#include <NsGui/IView.h>
+#include <NsGui/Grid.h>
+#include <NsApp/LocalXamlProvider.h>
+#include <NsApp/LocalFontProvider.h>
+
+// You must include the GLRenderDevice provided in the Noesis SDK Samples
+#include "GLRenderDevice.h"
+
 // Forward declarations
 class IInputHandler;  // Forward declare IInputHandler
 class InputSystem;    // Forward declare InputSystem
