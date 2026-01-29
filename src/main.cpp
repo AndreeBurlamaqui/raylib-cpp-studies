@@ -1,3 +1,10 @@
+// Resolve Windows/Raylib CloseWindow conflict
+#if defined(_WIN32)
+#define NOGDI             // All of these macros help prevent 
+#define NOUSER            // namespace pollution from Windows.h
+#define WIN32_LEAN_AND_MEAN
+#endif
+
 #include "raylib.h"
 #include "resource_dir.h"	// utility header for SearchAndSetResourceDir
 #include <vector>
@@ -15,6 +22,9 @@
 
 // You must include the GLRenderDevice provided in the Noesis SDK Samples
 #include "GLRenderDevice.h"
+
+namespace Ns = Noesis;
+namespace NsApp = NoesisApp;
 
 // Forward declarations
 class IInputHandler;  // Forward declare IInputHandler
@@ -92,6 +102,24 @@ int main ()
 	// Utility function from resource_dir.h to find the resources folder and set it as the current working directory so we can load from it
 	SearchAndSetResourceDir("resources");
 
+	// Initiate Noesis
+	Noesis::SetLogHandler([](const char*, uint32_t, uint32_t level, const char*, const char* msg)
+		{
+			// [TRACE] [DEBUG] [INFO] [WARNING] [ERROR]
+			const char* prefixes[] = { "T", "D", "I", "W", "E" };
+			printf("[NOESIS/%s] %s\n", prefixes[level], msg);
+		});
+
+	Noesis::GUI::Init();
+	Ns::GUI::SetXamlProvider(Ns::MakePtr <NsApp::LocalXamlProvider>("../build/Plugins/NoesisGUI/Data"));
+	Ns::Ptr<Ns::RenderDevice> device = *new NsApp::GLRenderDevice();
+
+	Ns::Ptr<Ns::FrameworkElement> root = Ns::GUI::LoadXaml<Ns::FrameworkElement>("Reflections.xaml");
+	Ns::Ptr<Ns::IView> view = Ns::GUI::CreateView(root);
+
+	view->GetRenderer()->Init(device);
+	view->SetSize(initalScreenWidth, initalScreenHeight);
+
 	InputSystem& inputSystem = InputSystem::Get();
 
 	std::vector<IGameObject*> gameObjects; // TODO: Add game loop to add game objects at runtime easily
@@ -105,20 +133,31 @@ int main ()
 		inputSystem.Poll(deltaTime);
 
 		// 2. Update
+		view->Update(GetTime());
 		for (auto* gameObject : gameObjects) {
 			gameObject->Update(deltaTime);
 		}
 
 		// 3. Draw
 		BeginDrawing();
+
+		// Game world
 		ClearBackground(BLACK);
 		for (const auto* gameObject : gameObjects) {
 			gameObject->Draw();
 		}
+		
+		// UI
+		rlDrawRenderBatchActive(); // Force Raylib to finish its work
+		view->GetRenderer()->UpdateRenderTree();
+		view->GetRenderer()->Render();
+
 		EndDrawing();
 
 	}
 
+	view->GetRenderer()->Shutdown();
+	Noesis::GUI::Shutdown();
 	CloseWindow();
 	return 0;
 }

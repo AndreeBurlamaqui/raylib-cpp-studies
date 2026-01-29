@@ -198,6 +198,14 @@ if (downloadRaylib) then
         flags { "ShadowedVariables"}
         platform_defines()
 
+        -- [[ NEW: NOESIS LIBS & DLL COPY ]]
+        -- 1. Add Library Directory
+        libdirs { noesis_dir .. "/Lib/windows_x86" }
+        links { 
+            "Noesis", 
+            "NoesisApp" 
+        }
+
         filter "action:vs*"
             defines{"_WINSOCK_DEPRECATED_NO_WARNINGS", "_CRT_SECURE_NO_WARNINGS"}
             dependson {"raylib"}
@@ -209,15 +217,12 @@ if (downloadRaylib) then
             defines{"_WIN32"}
             links {"winmm", "gdi32", "opengl32"}
             libdirs {"../bin/%{cfg.buildcfg}"}
-
-            -- [[ NEW: NOESIS LIBS & DLL COPY ]]
-            -- 1. Add Library Directory
-            libdirs { noesis_dir .. "/Lib/windows_x86_64" }
             
             -- 2. Post-Build Command to copy Noesis.dll
             -- We use path.getabsolute to ensure the command works regardless of where the build runs
             postbuildcommands {
-                "{COPY} " .. path.getabsolute(noesis_dir) .. "/Bin/windows_x86_64/Noesis.dll %{cfg.targetdir}"
+                "{COPY} " .. path.getabsolute(noesis_dir) .. "/Bin/windows_x86/Noesis.dll %{cfg.targetdir}",
+                "{COPY} " .. path.getabsolute(noesis_dir) .. "/Bin/windows_x86/NoesisApp.dll %{cfg.targetdir}"
             }
 
         filter "system:linux"
